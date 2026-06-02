@@ -1,0 +1,1 @@
+const a = []; while(true) a.push(new Array(1000000).fill(1));

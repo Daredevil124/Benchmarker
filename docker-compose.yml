@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  master:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: ["./benchmarker", "-mode=master"]
+    ports:
+      - "9000:9000"
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: ["./benchmarker", "-mode=worker"]
+    environment:
+      - REDIS_ADDR=redis:6379
+      - HOST_WORKDIR=${PWD}/server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD}/server/temp_sandboxes:/app/temp_sandboxes
+    depends_on:
+      - master
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - master

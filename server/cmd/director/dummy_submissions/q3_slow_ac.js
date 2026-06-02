@@ -1,0 +1,1 @@
+const fs = require('fs'); const input = fs.readFileSync(0, 'utf-8').trim(); setTimeout(() => { const lines = input.split('\n'); const arr = lines[0].split(' ').map(Number); const target = Number(lines[1]); console.log(arr.indexOf(target)); }, 1000);

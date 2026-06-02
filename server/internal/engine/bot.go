@@ -1,28 +1,50 @@
 package engine
 
 import (
+	"context"
 	"iicpc-backend/internal/models"
 	"net/http"
-	"sync"
 	"time"
 )
 
-func FireBot(botID int, targetURL string, wg *sync.WaitGroup, results chan<- models.AttackResult) {
-	defer wg.Done()
-	start := time.Now()
-	resp, err := http.Get(targetURL)
-	latency := time.Since(start).Milliseconds()
-	if err != nil {
-		results <- models.AttackResult{
-			BotID: botID,
-			Error: err.Error(),
-		}
-		return
+func FireBot(ctx context.Context, botID int, targetURL string, results chan<- models.AttackResult) {
+	client := &http.Client{
+		Timeout: 3 * time.Second,
 	}
-	defer resp.Body.Close()
-	results <- models.AttackResult{
-		BotID:      botID,
-		Latency:    latency,
-		StatusCode: resp.StatusCode,
+	
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		start := time.Now()
+		resp, err := client.Get(targetURL)
+		latency := time.Since(start).Milliseconds()
+
+		var res models.AttackResult
+		if err != nil {
+			res = models.AttackResult{
+				BotID: botID,
+				Error: err.Error(),
+			}
+		} else {
+			res = models.AttackResult{
+				BotID:      botID,
+				Latency:    latency,
+				StatusCode: resp.StatusCode,
+			}
+			resp.Body.Close()
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case results <- res:
+		}
+
+		// Sleek delay between requests to keep the load high but stable
+		time.Sleep(50 * time.Millisecond)
 	}
 }

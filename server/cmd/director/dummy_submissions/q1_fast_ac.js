@@ -1,0 +1,1 @@
+const fs = require('fs'); const input = fs.readFileSync(0, 'utf-8').trim(); const arr = input.split(',').map(Number); arr.sort((a,b)=>a-b); console.log(arr.join(','));

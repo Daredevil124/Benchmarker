@@ -1,0 +1,12 @@
+FROM alpine:3.19
+
+RUN apk update && \
+    apk add --no-cache \
+    python3 \
+    nodejs \
+    g++ \
+    openjdk11 \
+    coreutils \
+    bash
+
+WORKDIR /usr/src/app
